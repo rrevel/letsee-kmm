@@ -21,8 +21,8 @@ Add both dependencies to your app module's `build.gradle.kts`. **Both are requir
 
 ```kotlin
 dependencies {
-    implementation("ai.arrox.letsee.kmm:LetSeeCore:0.0.9")
-    implementation("ai.arrox.letsee.kmm:LetSeeUI:0.0.9")
+    implementation("io.github.rrevel.letsee-kmm:LetSeeCore:0.0.9")
+    implementation("io.github.rrevel.letsee-kmm:LetSeeUI:0.0.9")
 }
 ```
 
@@ -267,7 +267,7 @@ kmm/
 
 ## Publishing
 
-Artifacts are published to Maven Central under the group `ai.arrox.letsee.kmm`.
+Artifacts are published to Maven Central under the group `io.github.rrevel.letsee-kmm`.
 
 | Artifact | Description |
 |---|---|
