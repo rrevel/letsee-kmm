@@ -1,18 +1,25 @@
 package io.github.letsee.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -22,15 +29,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 
 import io.github.letsee.interfaces.LetSee
 import io.github.letsee.ui.components.JsonViewer
 import io.github.letsee.ui.navigation.DebugScreen
+import io.github.letsee.ui.platform.copyToClipboard
 import io.github.letsee.ui.screens.MockPickerScreen
 import io.github.letsee.ui.screens.RequestListScreen
 import io.github.letsee.ui.screens.ScenariosScreen
@@ -95,11 +106,10 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
                                             .semantics { contentDescription = "Close debug panel" }
                                             .testTag("letsee_close_button"),
                                     ) {
-                                        Text(
-                                            text = "X",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                        Icon(
+                                            imageVector = Icons.Filled.Close,
+                                            contentDescription = "Close",
+                                            tint = MaterialTheme.colorScheme.onSurface,
                                         )
                                     }
                                 },
@@ -143,6 +153,7 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
                         is DebugScreen.MockPicker -> {
                             MockPickerTopBar(
                                 title = screen.requestUIModel.displayName,
+                                fullUrl = screen.requestUIModel.request.uri,
                                 onBack = { navigateBack() },
                             )
                         }
@@ -156,16 +167,16 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
                                     )
                                 },
                                 navigationIcon = {
-                                    TextButton(
+                                    IconButton(
                                         onClick = { navigateBack() },
                                         modifier = Modifier
                                             .semantics { contentDescription = "Navigate back" }
                                             .testTag("letsee_back_button"),
                                     ) {
-                                        Text(
-                                            text = "\u2190 Back",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = MaterialTheme.colorScheme.primary,
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Back",
+                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
                                 },
@@ -237,32 +248,85 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
 @Composable
 internal fun MockPickerTopBar(
     title: String,
+    fullUrl: String,
     onBack: () -> Unit,
 ) {
-    TopAppBar(
-        title = {
+    val pathOnlyTitle = remember(title) { title.substringBefore("?") }
+    var expanded by remember(pathOnlyTitle) { mutableStateOf(false) }
+    var hasOverflow by remember(pathOnlyTitle) { mutableStateOf(false) }
+    val lineLimit = if (expanded) Int.MAX_VALUE else 3
+
+    Column {
+        TopAppBar(
+            title = {},
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .testTag("mock_picker_back")
+                        .semantics { contentDescription = "Navigate back" },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+            ),
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        },
-        navigationIcon = {
-            TextButton(
-                onClick = onBack,
+                text = pathOnlyTitle,
                 modifier = Modifier
-                    .testTag("mock_picker_back")
-                    .semantics { contentDescription = "Navigate back" },
-            ) {
-                Text(
-                    text = "\u2190 Back",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                    .weight(1f)
+                    .testTag("mock_picker_path_label"),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = lineLimit,
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = { layoutResult ->
+                    if (!expanded) {
+                        hasOverflow = layoutResult.hasVisualOverflow
+                    }
+                },
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (hasOverflow || expanded) {
+                    IconButton(
+                        onClick = { expanded = !expanded },
+                        modifier = Modifier.testTag("mock_picker_more"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreHoriz,
+                            contentDescription = if (expanded) "Show less URL" else "Show more URL",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { copyToClipboard(fullUrl) },
+                    modifier = Modifier.testTag("mock_picker_copy"),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = "Copy URL",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-    )
+        }
+    }
 }

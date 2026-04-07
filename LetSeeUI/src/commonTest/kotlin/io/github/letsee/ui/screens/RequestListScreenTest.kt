@@ -12,7 +12,7 @@ import kotlin.test.Test
 class RequestListScreenTest {
 
     @Test
-    fun requestRow_showsFullLongUrl_withoutEllipsisTruncation() = runComposeUiTest {
+    fun requestRow_showsLongUrl_withThreeLineLimit() = runComposeUiTest {
         val requestModel = TestFixtures.requestUiModel(
             displayName = TestFixtures.LongFullUrl,
         )

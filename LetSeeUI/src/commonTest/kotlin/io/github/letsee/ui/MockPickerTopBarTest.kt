@@ -18,13 +18,16 @@ class MockPickerTopBarTest {
             LetSeeTheme(darkTheme = false) {
                 MockPickerTopBar(
                     title = TestFixtures.LongBaseUrlPath,
+                    fullUrl = TestFixtures.LongFullUrl,
                     onBack = {},
                 )
             }
         }
 
+        onNodeWithTag("mock_picker_path_label", useUnmergedTree = true).fetchSemanticsNode()
         onNodeWithText("[BaseURL]/arrangement-manager", substring = true).fetchSemanticsNode()
         onNodeWithTag("mock_picker_back", useUnmergedTree = true).fetchSemanticsNode()
+        onNodeWithTag("mock_picker_copy", useUnmergedTree = true).fetchSemanticsNode()
     }
 
     @Test
@@ -35,6 +38,7 @@ class MockPickerTopBarTest {
             LetSeeTheme(darkTheme = false) {
                 MockPickerTopBar(
                     title = TestFixtures.LongFullUrl,
+                    fullUrl = TestFixtures.LongFullUrl,
                     onBack = { backPressed = true },
                 )
             }

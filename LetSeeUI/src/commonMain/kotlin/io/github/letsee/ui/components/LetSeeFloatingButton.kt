@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -273,12 +274,17 @@ private fun QuickAccessCard(
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
+                val quickAccessPath = remember(request.displayName) {
+                    truncateFromStartKeepingPathTail(request.displayName.substringBefore("?"))
+                }
                 Text(
-                    text = request.displayName,
+                    text = quickAccessPath,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     modifier = Modifier.testTag("letsee_quick_access_title"),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -331,4 +337,25 @@ private fun MockPill(mock: Mock, onClick: () -> Unit) {
             maxLines = 1,
         )
     }
+}
+
+private fun truncateFromStartKeepingPathTail(path: String, maxChars: Int = 72): String {
+    if (path.length <= maxChars) return path
+
+    val segments = path.split('/').filter { it.isNotBlank() }
+    if (segments.isEmpty()) return "...${path.takeLast(maxChars - 3)}"
+
+    var tail = ""
+    for (index in segments.indices.reversed()) {
+        val candidate = if (tail.isEmpty()) {
+            "/${segments[index]}"
+        } else {
+            "/${segments[index]}$tail"
+        }
+
+        if (candidate.length + 3 > maxChars) break
+        tail = candidate
+    }
+
+    return if (tail.isNotEmpty()) "...$tail" else "...${path.takeLast(maxChars - 3)}"
 }

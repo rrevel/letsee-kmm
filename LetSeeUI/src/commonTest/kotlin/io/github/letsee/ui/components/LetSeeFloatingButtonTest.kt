@@ -60,9 +60,9 @@ class LetSeeFloatingButtonTest {
     }
 
     @Test
-    fun floatingButton_quickAccessShowsFullPath_andActiveCardTag() = runComposeUiTest {
+    fun floatingButton_quickAccessShowsPathTail_andActiveCardTag() = runComposeUiTest {
         val request = TestFixtures.requestUiModelWithSpecificMocks(
-            displayName = TestFixtures.LongBaseUrlPath,
+            displayName = "${TestFixtures.LongBaseUrlPath}?withLatestBalances=true&size=10",
         )
 
         setContent {
@@ -78,6 +78,6 @@ class LetSeeFloatingButtonTest {
         }
 
         onNodeWithTag("letsee_quick_access_card_active", useUnmergedTree = true).fetchSemanticsNode()
-        onNodeWithText("[BaseURL]/arrangement-manager", substring = true).fetchSemanticsNode()
+        onNodeWithText("productsummary/context/arrangements", substring = true).fetchSemanticsNode()
     }
 }
